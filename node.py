@@ -121,7 +121,7 @@ class Node():
             self.status = SEGUIDOR
             self.iniciar_timeout()
 
-    def heartbeat_follower(self, msg):
+    def seguidor_batida(self, msg):
         termo = msg["termo"]
         if self.termo <= termo:
             self.lider = msg["endereco"]
