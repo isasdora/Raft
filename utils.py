@@ -7,8 +7,8 @@ def timeout_aleatorio():
     return random.randrange(cfg.MIN_TIMEOUT, cfg.MAX_TIMEOUT) / 1000
 
 
-def enviar(eleitor, rota, mensage):
-    url = eleitor + '/' + rota
+def enviar(endereco, rota, mensage):
+    url = endereco + '/' + rota
     try:
         reply = requests.post(
             url=url,

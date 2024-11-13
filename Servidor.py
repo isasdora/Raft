@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route("/request", methods=['GET'])
 def pegar_valor():
-    payload = request.get_json().get("payload", {})
+    payload = request.json["payload"]
     resposta = {"codigo": 'falhou', 'payload': payload}
     
     if n.status == LIDER:
@@ -19,9 +19,9 @@ def pegar_valor():
         resposta["payload"]["message"] = n.lider
     return jsonify(resposta)
 
-@app.route("/request", methods=['POST'])
+@app.route("/request", methods=['PUT'])
 def mandar_valor():
-    payload = request.get_json().get("payload", {})
+    payload = request.json["payload"]
     resposta = {"codigo": "falha"}
     
     if n.status == LIDER:
@@ -35,19 +35,19 @@ def mandar_valor():
 
 @app.route("/votar", methods=['POST'])
 def votar():
-    termo = request.json.get("termo")
-    indice_compromisso = request.json.get("indice_compromisso")
-    staged = request.json.get("staged")
+    termo = request.json["termo"]
+    indice_compromisso = request.json["indice_compromisso"]
+    em_espera = request.json["em_espera"]
     
-    escolha, termo = n.decidir_voto(termo, indice_compromisso, staged)
-    mensagem = {"escolha": escolha, "termo": termo}
-    return jsonify(mensagem)
+    escolha, termo = n.decidir_voto(termo, indice_compromisso, em_espera)
+    message = {"escolha": escolha, "termo": termo}
+    return jsonify(message)
 
-@app.route("/batidas", methods=['POST'])
-def batidas():
+@app.route("/heartbeat", methods=['POST'])
+def heartbeat():
     termo, indice_compromisso = n.seguidor_batida(request.json)
-    mensagem = {"termo": termo, "indice_compromisso": indice_compromisso}
-    return jsonify(mensagem)
+    message = {"termo": termo, "indice_compromisso": indice_compromisso}
+    return jsonify(message)
 
 # Desativar log do Flask
 log = logging.getLogger('werkzeug')
@@ -57,23 +57,23 @@ if __name__ == "__main__":
     # python servidor.py index
     if len(sys.argv) == 2:
         index = int(sys.argv[1])  # O índice do IP atual
-        Lista_IP_file = "Lista_IP.txt"  # Nome fixo do arquivo de IPs
+        Lista_IP_file = "Lista_IP.txt"
         Lista_IP = []
         
         # Abre o arquivo de IPs e carrega todos os IPs
         with open(Lista_IP_file) as f:
             for ip in f:
                 Lista_IP.append(ip.strip())
-        
+
         # Retira o IP do nó atual da lista usando o índice fornecido
-        my_ip = Lista_IP.pop(index)
-        http, host, port = my_ip.split(':')
+        meu_ip = Lista_IP.pop(index)
+        http, host, port = meu_ip.split(':')
 
         # Exibe uma mensagem indicando o nó atual
-        print(f"Nó {index} ativo:  endereco IP = {my_ip}")
+        print(f"Nó {index} ativo:  endereco IP = {meu_ip}")
         
         # Inicializa o nó com a lista de IPs restantes e o IP do próprio nó
-        n = Node(Lista_IP, my_ip)
+        n = Node(Lista_IP, meu_ip)
 
         print(f"Iniciando nó em {host}:{port}")
         

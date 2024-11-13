@@ -10,18 +10,18 @@ LIDER = 2
 
 class Node():
     def __init__(self, colegas, meu_ip):
-        self.endereco = meu_ip
-        self.colegas = colegas
-        self.bloqueio = threading.Lock()
-        self.BD = {}
-        self.registro = []
-        self.em_espera = None
-        self.termo = 0
-        self.status = SEGUIDOR
-        self.maioria = ((len(self.colegas) + 1) // 2) + 1
-        self.contagem_votos = 0
-        self.indice_compromisso = 0
-        self.thread_timeout = None
+        self.endereco = meu_ip #ok
+        self.colegas = colegas  #ok
+        self.bloqueio = threading.Lock() #ok
+        self.BD = {} #ok
+        self.registro = [] #ok
+        self.em_espera = None #ok
+        self.termo = 0 #ok
+        self.status = SEGUIDOR #ok
+        self.maioria = ((len(self.colegas) + 1) // 2) + 1 #ok
+        self.contagem_votos = 0 #ok
+        self.indice_compromisso = 0 #ok
+        self.thread_timeout = None #ok
         self.iniciar_timeout()
 
     def iniciar_timeout(self):
@@ -68,7 +68,7 @@ class Node():
             "indice_compromisso": self.indice_compromisso,
             "em_espera": self.em_espera
         }
-        rota = "solicitacao_voto"
+        rota = "votar"
         while self.status == CANDIDATO and self.termo == termo:
             resposta = utils.enviar(eleitor, rota, mensagem)
             if resposta:
@@ -113,7 +113,7 @@ class Node():
                 self.tratar_resposta_heartbeat(resposta.json()["termo"],
                                                resposta.json()["indice_compromisso"])
             delta = time.time() - inicio
-            time.sleep((cfg.TEMPO_HB - delta) / 1000)
+            time.sleep((cfg.HB_TIME - delta) / 1000)
 
     def tratar_resposta_heartbeat(self, termo, indice_compromisso):
         if termo > self.termo:
@@ -161,9 +161,9 @@ class Node():
 
     def tratar_get(self, payload):
         print("obtendo", payload)
-        chave = payload["chave"]
+        chave = payload["key"]
         if chave in self.BD:
-            payload["valor"] = self.BD[chave]
+            payload["value"] = self.BD[chave]
             return payload
         else:
             return None
@@ -188,8 +188,8 @@ class Node():
         while sum(confirmacoes_registro) + 1 < self.maioria:
             aguardado += 0.0005
             time.sleep(0.0005)
-            if aguardado > cfg.MAX_TEMPO_REGISTRO / 1000:
-                print(f"aguardado {cfg.MAX_TEMPO_REGISTRO} ms, atualização rejeitada:")
+            if aguardado > cfg.MAX_LOG_WAIT / 1000:
+                print(f"aguardado {cfg.MAX_LOG_WAIT} ms, atualização rejeitada:")
                 self.bloqueio.release()
                 return False
         mensagem_commit = {
@@ -216,7 +216,7 @@ class Node():
     def commit(self):
         self.indice_compromisso += 1
         self.registro.append(self.em_espera)
-        chave = self.em_espera["chave"]
-        valor = self.em_espera["valor"]
+        chave = self.em_espera["key"]
+        valor = self.em_espera["value"]
         self.BD[chave] = valor
         self.em_espera = None
