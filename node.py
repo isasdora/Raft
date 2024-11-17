@@ -24,6 +24,7 @@ class Node():
         self.thread_timeout = None #ok
         self.iniciar_timeout()
 
+    #Simulação de Falhas e Recuperação - Isadora
     def iniciar_timeout(self):
         self.reiniciar_timeout()
         if self.thread_timeout and self.thread_timeout.is_alive():
@@ -42,6 +43,7 @@ class Node():
             else:
                 time.sleep(delta)
 
+    #Eleição de líder - Clesio
     def iniciarEleicao(self):
         self.termo += 1
         self.contagem_votos = 0
@@ -50,6 +52,7 @@ class Node():
         self.incrementarVoto()
         self.enviar_solicitacao_voto()
 
+    #Eleição de líder - Clesio
     def incrementarVoto(self):
         self.contagem_votos += 1
         if self.contagem_votos >= self.maioria:
@@ -57,11 +60,13 @@ class Node():
             self.status = LIDER
             self.iniciarHeartbeat()
 
+    #Replicação de Logs - Kaio
     def enviar_solicitacao_voto(self):
         for eleitor in self.colegas:
             threading.Thread(target=self.solicitar_voto,
                              args=(eleitor, self.termo)).start()
 
+    #Gerenciamento de Termos de Eleição - Gabriela
     def solicitar_voto(self, eleitor, termo):
         mensagem = {
             "termo": termo,
@@ -82,6 +87,7 @@ class Node():
                         self.status = SEGUIDOR
                 break
 
+    #Eleição de líder - Clesio
     def decidir_voto(self, termo, indice_compromisso, em_espera):
         if self.termo < termo and self.indice_compromisso <= indice_compromisso and (
                 em_espera or (self.em_espera == em_espera)):
@@ -100,6 +106,7 @@ class Node():
             t = threading.Thread(target=self.enviar_heartbeat, args=(colega,))
             t.start()
 
+    #Gerenciamento de Termos de Eleição - Gabriela
     def enviar_heartbeat(self, follower):
         if self.registro:
             self.atualizar_indice_compromisso_follower(follower)
@@ -115,12 +122,14 @@ class Node():
             delta = time.time() - inicio
             time.sleep((cfg.HB_TIME - delta) / 1000)
 
+    #Gerenciamento de Termos de Eleição - Gabriela
     def tratar_resposta_heartbeat(self, termo, indice_compromisso):
         if termo > self.termo:
             self.termo = termo
             self.status = SEGUIDOR
             self.iniciar_timeout()
 
+    #Gerenciamento de Termos de Eleição - Gabriela
     def seguidor_batida(self, msg):
         termo = msg["termo"]
         if self.termo <= termo:
@@ -146,6 +155,7 @@ class Node():
 
         return self.termo, self.indice_compromisso
 
+    #Gerenciamento de Termos de Eleição - Gabriela
     def atualizar_indice_compromisso_follower(self, follower):
         rota = "heartbeat"
         primeira_mensagem = {"termo": self.termo, "endereco": self.endereco}
@@ -159,6 +169,7 @@ class Node():
         if resposta and resposta.json()["indice_compromisso"] < self.indice_compromisso:
             resposta = utils.enviar(follower, rota, segunda_mensagem)
 
+    #Kaio servidor
     def tratar_get(self, payload):
         print("obtendo", payload)
         chave = payload["key"]
@@ -168,6 +179,7 @@ class Node():
         else:
             return None
 
+    #Kaio servidor
     def tratar_put(self, payload):
         print("colocando", payload)
 
@@ -205,6 +217,7 @@ class Node():
         print("maioria alcançada, respondendo ao cliente, enviando mensagem de compromisso")
         return True
 
+    #Replicação de Logs - Kaio
     def espalhar_atualizacao(self, mensagem, confirmacoes=None, bloqueio=None):
         for i, colega in enumerate(self.colegas):
             resposta = utils.enviar(colega, "heartbeat", mensagem)
@@ -213,6 +226,7 @@ class Node():
         if bloqueio:
             bloqueio.release()
 
+    #Replicação de Logs - Kaio
     def commit(self):
         self.indice_compromisso += 1
         self.registro.append(self.em_espera)
