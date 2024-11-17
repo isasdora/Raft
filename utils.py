@@ -7,12 +7,12 @@ def timeout_aleatorio():
     return random.randrange(cfg.MIN_TIMEOUT, cfg.MAX_TIMEOUT) / 1000
 
 
-def enviar(endereco, rota, mensage):
+def enviar(endereco, rota, message):
     url = endereco + '/' + rota
     try:
         reply = requests.post(
             url=url,
-            json=mensage,
+            json=message,
             timeout=cfg.REQUESTS_TIMEOUT / 1000,
         )
     # failed to send request

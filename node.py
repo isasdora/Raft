@@ -144,6 +144,7 @@ class Node():
                 self.termo = termo
 
             if "acao" in msg:
+                print("Acao recebida", msg)
                 acao = msg["acao"]
                 if acao == "registro":
                     payload = msg["payload"]
